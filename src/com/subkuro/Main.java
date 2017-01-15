@@ -4,8 +4,8 @@ import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.TranslateOptions;
 import com.google.cloud.translate.Translation;
 import org.apache.commons.cli.*;
-import org.atilika.kuromoji.Token;
-import org.atilika.kuromoji.Tokenizer;
+import com.atilika.kuromoji.ipadic.Tokenizer;
+import com.atilika.kuromoji.ipadic.Token;
 
 import java.io.*;
 import java.util.*;
@@ -200,10 +200,10 @@ public class Main {
 
     static class ASSFile {
         HashMap<String, Section> sections = new LinkedHashMap();
-        Tokenizer tokenizer = Tokenizer.builder().build();
+        Tokenizer tokenizer = new Tokenizer();
         Translate translate = TranslateOptions.getDefaultInstance().getService();
         KanaToRomaji kr = new KanaToRomaji();
-        static private String newStyleName = "Default - top";
+        static private String newStyleName = "Default - left";
 
         public void parseFile(String inputFilePath) throws IOException {
             String currentSection = "";
@@ -229,6 +229,7 @@ public class Main {
             Section stylesSection = sections.get("[V4+ Styles]");
             assert stylesSection != null;
             stylesSection.lines.add("Style: Default - top,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,8,10,10,10,1");
+            stylesSection.lines.add("Style: Default - left,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,4,10,10,10,1");
         }
 
         void writeFile(String outputFilePath) throws IOException {
@@ -284,7 +285,7 @@ public class Main {
             ArrayList<String> tokens = new ArrayList<>();
             ArrayList<String> readingForms = new ArrayList<>();
             for (Token token : tokenizer.tokenize(group)) {
-                String surfaceForm = token.getSurfaceForm();
+                String surfaceForm = token.getSurface();
                 if (surfaceForm.length() == 1) {
                     if (Character.isWhitespace(surfaceForm.codePointAt(0)) || surfaceForm == "\u3000") {
                         continue;
@@ -324,7 +325,7 @@ public class Main {
                     sb.append("){\\i0}=");
                 }
                 sb.append(translation.getTranslatedText());
-                sb.append("; ");
+                sb.append(";\\N");
                 i += 1;
             }
             return sb.toString();
