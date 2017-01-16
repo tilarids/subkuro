@@ -1,3 +1,4 @@
+// Mostly copied from https://github.com/lkuza2/java-speech-api
 package com.subkuro;
 
 import com.google.cloud.translate.Translate;
