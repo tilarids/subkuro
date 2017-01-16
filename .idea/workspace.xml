@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30fd5ee0-8885-4d0a-8765-305ab01844ee" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/subkuro/GTranslate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/subkuro/Main.java" afterPath="$PROJECT_DIR$/src/com/subkuro/Main.java" />
     </list>
     <ignored path="subkuro.iws" />
@@ -28,8 +26,8 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/subkuro/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="122">
-              <caret line="298" column="122" selection-start-line="298" selection-start-column="122" selection-end-line="298" selection-end-column="122" />
+            <state relative-caret-position="2145">
+              <caret line="143" column="50" selection-start-line="143" selection-start-column="50" selection-end-line="143" selection-end-column="50" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#493#509#0" expanded="true" />
@@ -243,7 +241,7 @@
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="com.subkuro.Main" />
       <option name="VM_PARAMETERS" value="" />
-      <option name="PROGRAM_PARAMETERS" value="-i &quot;$USER_HOME$/Downloads/[Akatomba-Raws] Fullmetal Alchemist Brotherhood (BD 848x480 x264 AC3)/Fullmetal_Alchemist_Brotherhood_[1-64]/Fullmetal_Alchemist_Brotherhood_001.ass&quot; -o /tmp/001.ass" />
+      <option name="PROGRAM_PARAMETERS" value="-i &quot;$USER_HOME$/Downloads/[Akatomba-Raws] Fullmetal Alchemist Brotherhood (BD 848x480 x264 AC3)/Fullmetal_Alchemist_Brotherhood_[1-64]/Fullmetal_Alchemist_Brotherhood_002.ass&quot; -o /tmp/002.ass" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -685,8 +683,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/subkuro/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="122">
-          <caret line="298" column="122" selection-start-line="298" selection-start-column="122" selection-end-line="298" selection-end-column="122" />
+        <state relative-caret-position="2145">
+          <caret line="143" column="50" selection-start-line="143" selection-start-column="50" selection-end-line="143" selection-end-column="50" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#493#509#0" expanded="true" />

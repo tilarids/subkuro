@@ -138,7 +138,13 @@ public class Main {
                     } else if (m.containsKey(s.substring(i, i + 1))) {
                         t.append(m.get(s.substring(i, i + 1)));
                     } else if (s.charAt(i) == 'ッ') {
-                        t.append(m.get(s.substring(i + 1, i + 2)).charAt(0));
+                        String val = m.get(s.substring(i + 1, i + 2));
+                        if  (val == null) {
+                            System.err.println("Error looking up " + s.substring(i + 1, i + 2) + " for " + s);
+                            t.append(s.charAt(i));
+                        } else {
+                            t.append(val.charAt(0));
+                        }
                     } else {
                         t.append(s.charAt(i));
                     }
