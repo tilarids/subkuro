@@ -5,7 +5,7 @@ import org.apache.commons.cli.*;
 
 import java.io.*;
 
-public class SubtitleTranslate {
+public class SubtitlesTranslate {
 
     public static void main(String[] args) {
         Options options = new Options();
@@ -45,7 +45,7 @@ public class SubtitleTranslate {
     private static void processFile(String inputFilePath, String outputFilePath) throws IOException {
         ASSFile f = new ASSFile();
         f.parseFile(inputFilePath);
-        f.addStyle();
+        f.addStyles();
         f.updateDialogue();
         f.writeFile(outputFilePath);
     }

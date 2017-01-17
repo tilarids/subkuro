@@ -25,13 +25,13 @@ class ASSFile {
     }
 
     HashMap<String, Section> sections = new LinkedHashMap();
-    Tokenizer tokenizer = new Tokenizer();
-    //Translate translate = TranslateOptions.getDefaultInstance().getService();
-    GTranslate translate = new GTranslate();
-    KanaToRomaji kr = new KanaToRomaji();
+    HashMap<String, PhraseTranslator.Phrases> phrases = new LinkedHashMap();
+
+    PhraseTranslator translator = new PhraseTranslator();
     static private String leftStyleName = "Default - left";
     static private String topStyleName = "Default - top";
     static private String oldStyleName = "*Default";
+    static private String rightStyleName = "Default - right";
 
     public void parseFile(String inputFilePath) throws IOException {
         String currentSection = "";
@@ -53,11 +53,12 @@ class ASSFile {
         }
     }
 
-    void addStyle() {
+    void addStyles() {
         Section stylesSection = sections.get("[V4+ Styles]");
         assert stylesSection != null;
         stylesSection.lines.add("Style: Default - top,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,8,10,10,10,1");
         stylesSection.lines.add("Style: Default - left,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,4,10,10,10,1");
+        stylesSection.lines.add("Style: Default - right,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,6,10,10,10,1");
     }
 
     void writeFile(String outputFilePath) throws IOException {
@@ -106,72 +107,66 @@ class ASSFile {
             if (matcher.group(2).compareTo(oldStyleName) != 0) {
                 continue;
             }
-            Phrases newPhrase = getNewPhrases(matcher.group(4));
-            newLines.add(matcher.group(1) + leftStyleName + matcher.group(3) + newPhrase.mainPhrase);
+            PhraseTranslator.Phrases newPhrase = translator.translatePhrase(matcher.group(4));
+            StringBuilder mainPhrase = new StringBuilder(matcher.group(4).length() * 2);
+            for (String foreignToken : newPhrase.foreignTokens) {
+                mainPhrase.append(foreignToken);
+                mainPhrase.append("\\N");
+            }
+
+            StringBuilder translatedPhrase = new StringBuilder(matcher.group(4).length() * 2);
+            for (String translatedToken : newPhrase.translatedTokens) {
+                translatedPhrase.append(translatedToken);
+                translatedPhrase.append("\\N");
+            }
+            translatedPhrase.append("\\N\\N");
+            translatedPhrase.append(newPhrase.translation);
+
+            newLines.add(matcher.group(1) + leftStyleName + matcher.group(3) + mainPhrase.toString());
+            newLines.add(matcher.group(1) + rightStyleName + matcher.group(3) + translatedPhrase.toString());
+
             newLines.add(matcher.group(1) + topStyleName + matcher.group(3) + newPhrase.romanization);
-            System.out.println("T: " + newPhrase.mainPhrase);
+            System.out.println("T: " + mainPhrase.toString());
         }
         eventsSection.lines = newLines;
     }
 
-    private Phrases getNewPhrases(String group) throws IOException {
-        ArrayList<String> tokens = new ArrayList<>();
-        ArrayList<String> readingForms = new ArrayList<>();
+    public void parseTranslatedDialogue() {
+        Section eventsSection = sections.get("[Events]");
+        assert eventsSection != null;
+        ArrayList<String> newLines = new ArrayList<>();
 
-        for (Token token : tokenizer.tokenize(group)) {
-            String surfaceForm = token.getSurface();
-            if (surfaceForm.length() == 1) {
-                if (Character.isWhitespace(surfaceForm.codePointAt(0)) || surfaceForm == "\u3000" || surfaceForm == "…") {
-                    continue;
-                }
-            }
-            String reading = token.getReading();
-
-            readingForms.add(reading);
-            tokens.add(surfaceForm);
-        }
-
-        for (int i = 0; i < tokens.size() - 1; ++i) {
-            if (readingForms.get(i).endsWith("ッ")) {
-                tokens.set(i, tokens.get(i) + tokens.get(i + 1));
-                readingForms.set(i, readingForms.get(i) + readingForms.get(i + 1));
-                tokens.remove(i + 1);
-                readingForms.remove(i + 1);
-            }
-            readingForms.set(i, kr.convert(readingForms.get(i)));
-        }
-        readingForms.set(tokens.size() - 1, kr.convert(readingForms.get(tokens.size() - 1)));
-
-        ArrayList<GTranslate.TranslationResult> translations = translate.translate(tokens);
-        StringBuilder sb = new StringBuilder(group.length() * 4);
-        for (int i = 0; i < translations.size(); ++i) {
-            if (tokens.get(i).trim().isEmpty()) {
+        Pattern pattern = Pattern.compile("Dialogue: \\d+,(\\d+:\\d+:\\d+.\\d+,\\d+:\\d+:\\d+.\\d+,)([^,]+)(,[^,]+,\\d+,\\d+,\\d+,,)(.*)");
+        for (String line : eventsSection.lines) {
+            if (!line.startsWith("Dialogue:")) {
                 continue;
             }
-            sb.append(tokens.get(i));
-            if (readingForms.get(i) != null) {
-                sb.append("{\\i1}(");
-                sb.append(readingForms.get(i));
-                sb.append("){\\i0}=");
+            Matcher matcher = pattern.matcher(line);
+            if (!matcher.find()) {
+                throw new RuntimeException("Can't find a Dialogue line: \n" + line);
             }
-            sb.append(translations.get(i).translation);
-            sb.append(";\\N");
-        }
-
-        GTranslate.TranslationResult full = translate.translate(group);
-        sb.append("\\N");
-        sb.append(full.translation);
-
-        return new Phrases(sb.toString(), full.romanization);
-    }
-
-    private class Phrases {
-        private final String mainPhrase;
-        private final String romanization;
-
-        public Phrases(String s, String romanization) {
-            this.mainPhrase = s;
-            this.romanization = romanization;
+            PhraseTranslator.Phrases phrase = phrases.get(matcher.group(1));
+            if (phrase == null) {
+                phrase = new PhraseTranslator.Phrases("", "", "");
+                phrases.put(matcher.group(1), phrase);
+            }
+            if (matcher.group(2).compareTo(oldStyleName) == 0) {
+                phrase.original = matcher.group(4);
+            } else if (matcher.group(2).compareTo(leftStyleName) == 0) {
+                String[] parts = matcher.group(4).split("\\\\N");
+                for (String part : parts) {
+                    phrase.foreignTokens.add(part);
+                }
+            } else if (matcher.group(2).compareTo(leftStyleName) == 0) {
+                String[] partsOuter = matcher.group(4).split("\\\\N\\\\N");
+                String[] partsInner = partsOuter[0].split("\\\\N");
+                for (String part : partsInner) {
+                    phrase.translatedTokens.add(part);
+                }
+                phrase.translation = partsOuter[1];
+            } else if (matcher.group(2).compareTo(topStyleName) == 0) {
+                phrase.romanization = matcher.group(4);
+            }
         }
     }
 }
