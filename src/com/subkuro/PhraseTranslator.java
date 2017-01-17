@@ -72,7 +72,7 @@ public class PhraseTranslator {
         public String romanization;
         public String translation;
         public String original;
-
+        public final ArrayList<String> readingFormTokens = new ArrayList<>();
 
         public Phrases(String original, String romanization, String translation) {
             this.original = original;

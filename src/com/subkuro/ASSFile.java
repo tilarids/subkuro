@@ -1,10 +1,9 @@
 package com.subkuro;
 
-import com.atilika.kuromoji.ipadic.Token;
-import com.atilika.kuromoji.ipadic.Tokenizer;
-
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
@@ -26,6 +25,7 @@ class ASSFile {
 
     HashMap<String, Section> sections = new LinkedHashMap();
     HashMap<String, PhraseTranslator.Phrases> phrases = new LinkedHashMap();
+    ArrayList<String> phrasesIndex = null;
 
     PhraseTranslator translator = new PhraseTranslator();
     static private String leftStyleName = "Default - left";
@@ -39,8 +39,11 @@ class ASSFile {
         FileInputStream fis = new FileInputStream(inputFilePath);
         UnicodeBOMInputStream ubis = new UnicodeBOMInputStream(fis);
         ubis.skipBOM();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                ubis, ubis.getBOM().toString()))) {
+        String encoding = ubis.getBOM().toString();
+        if (encoding == "NONE") {
+            encoding = "UTF-8";  // default is UTF-8.
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(ubis, encoding))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("[") && line.endsWith("]")) {
@@ -124,7 +127,6 @@ class ASSFile {
 
             newLines.add(matcher.group(1) + leftStyleName + matcher.group(3) + mainPhrase.toString());
             newLines.add(matcher.group(1) + rightStyleName + matcher.group(3) + translatedPhrase.toString());
-
             newLines.add(matcher.group(1) + topStyleName + matcher.group(3) + newPhrase.romanization);
             System.out.println("T: " + mainPhrase.toString());
         }
@@ -155,9 +157,11 @@ class ASSFile {
             } else if (matcher.group(2).compareTo(leftStyleName) == 0) {
                 String[] parts = matcher.group(4).split("\\\\N");
                 for (String part : parts) {
-                    phrase.foreignTokens.add(part);
+                    String[] split = part.split("\\{\\\\i1\\}");
+                    phrase.foreignTokens.add(split[0]);
+                    phrase.readingFormTokens.add(split[1].substring(1, split[1].length() - 7));
                 }
-            } else if (matcher.group(2).compareTo(leftStyleName) == 0) {
+            } else if (matcher.group(2).compareTo(rightStyleName) == 0) {
                 String[] partsOuter = matcher.group(4).split("\\\\N\\\\N");
                 String[] partsInner = partsOuter[0].split("\\\\N");
                 for (String part : partsInner) {
@@ -168,5 +172,32 @@ class ASSFile {
                 phrase.romanization = matcher.group(4);
             }
         }
+        phrasesIndex = new ArrayList<>();
+        phrasesIndex.addAll(phrases.keySet());
+        Collections.sort(phrasesIndex);
+    }
+
+    PhraseTranslator.Phrases getPhraseAtTime(int time) {
+        if (phrasesIndex == null) {
+            throw new RuntimeException("No phrases index");
+        }
+
+        int index = Collections.binarySearch(phrasesIndex, getStringTime(time));
+
+        if (index < 0) {
+            index = -index - 2;
+        }
+        return phrases.get(phrasesIndex.get(index));
+    }
+
+    private String getStringTime(int time) {
+        int hours = time / 3600;
+        time -= hours * 3600;
+        int minutes = time / 60;
+
+        time -= minutes * 60;
+        int seconds = time;
+
+        return String.format("%d:%02d:%02d", hours, minutes, seconds);
     }
 }

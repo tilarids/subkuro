@@ -1,10 +1,18 @@
 package com.subkuro;
 
 import org.apache.commons.cli.*;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.jdom2.Document;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.concurrent.*;
 
 /**
  * Created by tilarids on 1/17/17.
@@ -55,14 +63,73 @@ public class VLCCompanion {
             Class.forName("org.postgresql.Driver");
             Connection con = DriverManager.getConnection (connectionURL);
             VLCCompanion companion = new VLCCompanion(con);
-            companion.startPolling(subtitleFile, con);
+            companion.startPolling(subtitleFile);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+    class Poller implements Runnable {
+        private final ASSFile subtitleFile;
+        private final SubtitlesDatabase database;
+        private final CompanionFrame frame;
+
+        Poller(ASSFile subtitleFile, SubtitlesDatabase database, CompanionFrame frame) {
+            this.subtitleFile = subtitleFile;
+            this.database = database;
+            this.frame = frame;
+        }
+
+        String getTime() throws IOException, JDOMException {
+            URL url = new URL ("http://localhost:8080/requests/status.xml");
+            String encoding = java.util.Base64.getEncoder().encodeToString(":1234".getBytes("utf-8"));
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setRequestProperty  ("Authorization", "Basic " + encoding);
+            InputStream content = (InputStream)connection.getInputStream();
+            BufferedReader in   =
+                    new BufferedReader (new InputStreamReader(content));
+            String line;
+            StringBuilder sb = new StringBuilder();
+            String inline = "";
+            while ((inline = in.readLine()) != null) {
+                sb.append(inline);
+            }
+
+            SAXBuilder builder = new SAXBuilder();
+
+            Document document = (Document) builder.build(new ByteArrayInputStream(sb.toString().getBytes()));
+            return document.getRootElement().getChildText("time");
+        }
+        @Override
+        public void run() {
+            try {
+                int time = Integer.decode(getTime());
+                PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(time);
+                this.frame.updateUI(time, phrase);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JDOMException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void startPolling(ASSFile subtitleFile, Connection con) throws SQLException {
+    private void startPolling(ASSFile subtitleFile) throws SQLException, InterruptedException, ExecutionException {
+        subtitleFile.parseTranslatedDialogue();
+        CompanionFrame frame = new CompanionFrame(this.database);
+        frame.setVisible(true);
+
+
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(new Poller(subtitleFile, database, frame), 0, 1, TimeUnit.SECONDS);
+        Thread.sleep(Long.MAX_VALUE);
     }
 }
