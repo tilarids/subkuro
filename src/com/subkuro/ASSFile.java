@@ -56,12 +56,17 @@ class ASSFile {
         }
     }
 
-    void addStyles() {
+    void addStyles(boolean showTranslation) {
         Section stylesSection = sections.get("[V4+ Styles]");
         assert stylesSection != null;
         stylesSection.lines.add("Style: Default - top,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,8,10,10,10,1");
         stylesSection.lines.add("Style: Default - left,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,4,10,10,10,1");
-        stylesSection.lines.add("Style: Default - right,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,6,10,10,10,1");
+        if (showTranslation) {
+            stylesSection.lines.add("Style: Default - right,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,6,10,10,10,1");
+        } else {
+            stylesSection.lines.add("Style: Default - right,Arial,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,0,100,0,0,1,2,2,6,10,10,10,1");
+        }
+
     }
 
     void writeFile(String outputFilePath) throws IOException {
@@ -159,10 +164,10 @@ class ASSFile {
                 for (String part : parts) {
                     String[] split = part.split("\\{\\\\i1\\}");
                     phrase.foreignTokens.add(split[0]);
-                    phrase.readingFormTokens.add(split[1].substring(1, split[1].length() - 7));
+                    phrase.readingFormTokens.add(split[1].substring(1, split[1].length() - 6));
                 }
             } else if (matcher.group(2).compareTo(rightStyleName) == 0) {
-                String[] partsOuter = matcher.group(4).split("\\\\N\\\\N");
+                String[] partsOuter = matcher.group(4).split("\\\\N\\\\N\\\\N");
                 String[] partsInner = partsOuter[0].split("\\\\N");
                 for (String part : partsInner) {
                     phrase.translatedTokens.add(part);

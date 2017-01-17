@@ -12,6 +12,7 @@ import java.util.*;
 public class CompanionFrame extends JFrame {
     private final SubtitlesDatabase database;
     private int time = -1;
+    private final Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
 
     public CompanionFrame(SubtitlesDatabase database) {
         this.database = database;
@@ -43,7 +44,22 @@ public class CompanionFrame extends JFrame {
                                      phrase.translatedTokens.get(i)));
         }
 
+        JButton fullTranslateButton = new JButton();
+
+        fullTranslateButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                fullTranslateButton.setText(phrase.translation);
+            }
+        });
+
+        Box  b = Box.createHorizontalBox();
+        b.add( Box.createHorizontalGlue() );
+        b.add( fullTranslateButton );
+        pane.add(b);
+
         pack();
+
+        positionWindow();
     }
 
     private class TokensPanel extends JPanel {
@@ -62,7 +78,9 @@ public class CompanionFrame extends JFrame {
 
             readingFormPartComponent.setText(this.readingFormPart);
             boolean shouldSkip = this.database.shouldSkip(this.foreignPart);
-            if (!shouldSkip) {
+            if (shouldSkip) {
+                translatedPartComponent.setText(this.foreignPart);
+            } else {
                 translatedPartComponent.setText(this.translatedPart);
             }
 
@@ -82,9 +100,15 @@ public class CompanionFrame extends JFrame {
                 }
             });
             this.add(readingFormPartComponent);
+            this.add(storeButton);
             this.add(revealButton);
             this.add(translatedPartComponent);
-            this.add(storeButton);
         }
+    }
+
+    public void positionWindow() {
+        int x = (int) (dimension.getWidth() - this.getWidth());
+        int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
+        this.setLocation(x, y);
     }
 }

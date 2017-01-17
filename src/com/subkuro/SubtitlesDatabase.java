@@ -32,6 +32,8 @@ public class SubtitlesDatabase {
     }
 
     public void storeSkipWord(String foreignPart) throws SQLException {
+        skipWords.add(foreignPart);
+
         PreparedStatement pstmt = connection.prepareStatement("insert into skip_words(id, data) values (?, ?)");
         pstmt.setString(1, foreignPart);
         PGobject jsonObject = new PGobject();

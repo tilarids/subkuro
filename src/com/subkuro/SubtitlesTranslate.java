@@ -18,6 +18,10 @@ public class SubtitlesTranslate {
         output.setRequired(true);
         options.addOption(output);
 
+        Option hideTranslation = new Option("h", "hide_translation", true, "should hide translations from the subtitles");
+        hideTranslation.setRequired(true);
+        options.addOption(hideTranslation);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -34,18 +38,22 @@ public class SubtitlesTranslate {
 
         String inputFilePath = cmd.getOptionValue("input");
         String outputFilePath = cmd.getOptionValue("output");
+        boolean showTranslation = true;
+        if (cmd.getOptionValue("hide_translation").compareTo("true") == 0) {
+            showTranslation = false;
+        }
 
         try {
-            processFile(inputFilePath, outputFilePath);
+            processFile(inputFilePath, outputFilePath, showTranslation);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void processFile(String inputFilePath, String outputFilePath) throws IOException {
+    private static void processFile(String inputFilePath, String outputFilePath, boolean showTranslation) throws IOException {
         ASSFile f = new ASSFile();
         f.parseFile(inputFilePath);
-        f.addStyles();
+        f.addStyles(showTranslation);
         f.updateDialogue();
         f.writeFile(outputFilePath);
     }
