@@ -1,5 +1,6 @@
 package com.subkuro;
 
+import com.sun.jna.NativeLibrary;
 import org.apache.commons.cli.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -35,6 +36,10 @@ public class VLCCompanion {
         db.setRequired(true);
         options.addOption(db);
 
+        Option media = new Option("m", "media", true, "media file path");
+        media.setRequired(true);
+        options.addOption(media);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -51,6 +56,9 @@ public class VLCCompanion {
 
         String inputFilePath = cmd.getOptionValue("input");
         String dbName = cmd.getOptionValue("db");
+        String mediaFilePath = cmd.getOptionValue("media");
+
+        NativeLibrary.addSearchPath("vlc", "/Applications/VLC.app/Contents/MacOS/lib");
 
         ASSFile subtitleFile = new ASSFile();
         try {
@@ -63,7 +71,7 @@ public class VLCCompanion {
             Class.forName("org.postgresql.Driver");
             Connection con = DriverManager.getConnection (connectionURL);
             VLCCompanion companion = new VLCCompanion(con);
-            companion.startPolling(subtitleFile);
+            companion.startPolling(subtitleFile, mediaFilePath);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
@@ -110,26 +118,21 @@ public class VLCCompanion {
         }
         @Override
         public void run() {
-            try {
-                int time = Integer.decode(getTime());
-                PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(time);
-                this.frame.updateUI(time, phrase);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JDOMException e) {
-                e.printStackTrace();
-            }
+            //                int time = Integer.decode(getTime());
+//                PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(time);
+            this.frame.updateUI(subtitleFile);
         }
     }
 
-    private void startPolling(ASSFile subtitleFile) throws SQLException, InterruptedException, ExecutionException {
+    private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws SQLException, InterruptedException, ExecutionException {
         subtitleFile.parseTranslatedDialogue();
-        CompanionFrame frame = new CompanionFrame(this.database);
+        CompanionFrame frame = new CompanionFrame(this.database, mediaFilePath);
         frame.setVisible(true);
 
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(new Poller(subtitleFile, database, frame), 0, 1, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new Poller(subtitleFile, database, frame), 0, 200, TimeUnit.MILLISECONDS);
+        frame.startPlaying();
         Thread.sleep(Long.MAX_VALUE);
     }
 }

@@ -182,7 +182,7 @@ class ASSFile {
         Collections.sort(phrasesIndex);
     }
 
-    PhraseTranslator.Phrases getPhraseAtTime(int time) {
+    PhraseTranslator.Phrases getPhraseAtTime(long time) {
         if (phrasesIndex == null) {
             throw new RuntimeException("No phrases index");
         }
@@ -192,16 +192,23 @@ class ASSFile {
         if (index < 0) {
             index = -index - 2;
         }
+        if (index < 0 || index >= phrasesIndex.size()) {
+            return null;
+        }
+
         return phrases.get(phrasesIndex.get(index));
     }
 
-    private String getStringTime(int time) {
-        int hours = time / 3600;
+    public String getStringTime(long time) {
+        long ms = time % 1000;
+        time /= 1000;
+
+        long hours = time / 3600;
         time -= hours * 3600;
-        int minutes = time / 60;
+        long minutes = time / 60;
 
         time -= minutes * 60;
-        int seconds = time;
+        long seconds = time;
 
         return String.format("%d:%02d:%02d", hours, minutes, seconds);
     }
