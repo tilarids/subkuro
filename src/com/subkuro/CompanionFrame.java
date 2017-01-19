@@ -20,10 +20,7 @@ import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
+import java.awt.event.*;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.*;
@@ -123,6 +120,8 @@ public class CompanionFrame extends JFrame implements KeyListener {
             this.mainPanel.playerPanel.togglePause();
         } else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) {
             this.mainPanel.playerPanel.seek(e);
+        } else if (key == KeyEvent.VK_V) {
+            this.translateHoverListener.hover();
         }
     }
 
@@ -135,6 +134,10 @@ public class CompanionFrame extends JFrame implements KeyListener {
         }
 
         public void mouseEntered(java.awt.event.MouseEvent evt) {
+            hover();
+        }
+
+        private void hover() {
             fullTranslate.setText(this.translation);
         }
     }
@@ -159,7 +162,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
 
             this.setLayout(new BorderLayout());
             this.readingPanel.setPreferredSize(new Dimension(200, 800));
-            this.translationPanel.setPreferredSize(new Dimension(200, 800));
+            this.translationPanel.setPreferredSize(new Dimension(250, 800));
             this.playerPanel.setPreferredSize(new Dimension(800, 800));
             this.add(this.readingPanel, BorderLayout.WEST);
             this.add(this.playerPanel, BorderLayout.CENTER);
@@ -167,7 +170,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
         }
 
         public void updateUI(PhraseTranslator.Phrases phrase) {
-            this.readingPanel.updateUI(phrase.readingFormTokens);
+            this.readingPanel.updateUI(phrase);
             this.translationPanel.updateUI(phrase);
 
         }
@@ -178,12 +181,28 @@ public class CompanionFrame extends JFrame implements KeyListener {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         }
 
-        public void updateUI(ArrayList<String> readingFormTokens) {
+        public void updateUI(PhraseTranslator.Phrases phrase) {
             this.removeAll();
-            for (String token : readingFormTokens) {
+            for (int i = 0; i < phrase.readingFormTokens.size(); ++i) {
+                String readingForm = phrase.readingFormTokens.get(i);
+                String foreignForm = phrase.foreignTokens.get(i);
+
                 JTextField field = new JTextField(20);
-                field.setText(token);
+                field.setText(readingForm);
                 field.setFont(defaultFont);
+                field.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        super.mouseEntered(e);
+                        field.setText(foreignForm);
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        super.mouseExited(e);
+                        field.setText(readingForm);
+                    }
+                });
                 this.add(field);
             }
         }
