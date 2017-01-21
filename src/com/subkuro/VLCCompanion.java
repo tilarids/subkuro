@@ -80,6 +80,10 @@ public class VLCCompanion {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
+        } catch (JDOMException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
     class Poller implements Runnable {
@@ -124,7 +128,7 @@ public class VLCCompanion {
         }
     }
 
-    private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws SQLException, InterruptedException, ExecutionException {
+    private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws SQLException, InterruptedException, ExecutionException, IOException, JDOMException {
         subtitleFile.parseTranslatedDialogue();
         CompanionFrame frame = new CompanionFrame(this.database, mediaFilePath);
         frame.setVisible(true);

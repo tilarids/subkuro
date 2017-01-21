@@ -11,6 +11,7 @@ import javafx.scene.image.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
+import org.jdom2.JDOMException;
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.player.direct.BufferFormat;
@@ -21,9 +22,12 @@ import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by tilarids on 1/17/17.
@@ -39,11 +43,29 @@ public class CompanionFrame extends JFrame implements KeyListener {
     private JLabel timeLabel;
     static Font defaultFont = new Font("Menlo", Font.PLAIN, 16);
 
-    public CompanionFrame(SubtitlesDatabase database, String mediaFile) {
+    private JMDict dict = null;
+
+    public CompanionFrame(SubtitlesDatabase database, String mediaFile) throws IOException, JDOMException {
         this.database = database;
         this.mediaFile = mediaFile;
         initUI();
 
+
+    }
+
+    Set<String> getGlosses(String lookup) {
+        if (this.dict == null) {
+            return new HashSet<>();
+        } else {
+            return this.dict.getGlosses(lookup);
+        }
+    }
+
+    void loadDict() throws IOException, JDOMException {
+        System.out.println("Loading the dictionary!");
+        JMDict newDict = new JMDict("JMdict.xml.gz");
+        System.out.println("Dictionary loaded!");
+        this.dict = newDict;
     }
 
     private void initUI() {
@@ -65,10 +87,31 @@ public class CompanionFrame extends JFrame implements KeyListener {
         this.fullTranslate.setFont(defaultFont);
 
         this.timeLabel = new JLabel();
+
+        JButton dictLoader = new JButton("load dict");
+        dictLoader.addActionListener((ActionEvent event) -> {
+            dictLoader.setText("loading...");
+            dictLoader.setEnabled(false);
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        loadDict();
+                        dictLoader.setText("loaded");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JDOMException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        });
+
         Box  b = Box.createHorizontalBox();
         b.add( Box.createHorizontalGlue() );
         b.add(this.timeLabel);
         b.add(this.fullTranslate);
+        b.add(dictLoader);
         pane.add(b);
 
         this.translateHoverListener = new TranslateHoverListener(fullTranslate);
@@ -236,6 +279,11 @@ public class CompanionFrame extends JFrame implements KeyListener {
                         translatedText.setText(translated);
                     }
                 });
+
+                Set<String> glosses = getGlosses(foreign);
+                if (!glosses.isEmpty()) {
+                    translatedText.setToolTipText("<html>" + String.join("<br>", glosses) + "</html>");
+                }
 
                 JButton storeButton = new JButton("store");
                 storeButton.addActionListener((ActionEvent event) -> {
