@@ -44,6 +44,8 @@ public class CompanionFrame extends JFrame implements KeyListener {
     static Font defaultFont = new Font("Menlo", Font.PLAIN, 16);
 
     private JMDict dict = null;
+    private JTextField fullForeign;
+    private JLabel selectedTranslate;
 
     public CompanionFrame(SubtitlesDatabase database, String mediaFile) throws IOException, JDOMException {
         this.database = database;
@@ -106,16 +108,41 @@ public class CompanionFrame extends JFrame implements KeyListener {
                 }
             });
         });
+        this.fullForeign = new JTextField();
+        this.selectedTranslate = new JLabel();
+        JButton dictTanslate = new JButton("dict translate");
+        dictTanslate.addActionListener((ActionEvent event) -> {
+            Set<String> glosses = getGlosses(fullForeign.getSelectedText());
+            selectedTranslate.setText(String.join("; ", glosses));
+        });
+        JButton googleTranslate = new JButton("gtranslate");
+        googleTranslate.addActionListener((ActionEvent event) -> {
+            try {
+                selectedTranslate.setText(new GTranslate().translate(fullForeign.getSelectedText()).translation);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
-        Box  b = Box.createHorizontalBox();
-        b.add( Box.createHorizontalGlue() );
-        b.add(this.timeLabel);
-        b.add(this.fullTranslate);
-        b.add(dictLoader);
-        pane.add(b);
+        Box  foreignBox = Box.createHorizontalBox();
+        foreignBox.add(Box.createHorizontalGlue() );
+        foreignBox.add(this.fullForeign);
+        foreignBox.add(selectedTranslate);
+        foreignBox.add(dictTanslate);
+        foreignBox.add(googleTranslate);
+        pane.add(foreignBox);
+
+        Box  translateBox = Box.createHorizontalBox();
+        translateBox.add( Box.createHorizontalGlue() );
+        translateBox.add(this.timeLabel);
+        translateBox.add(this.fullTranslate);
+        translateBox.add(dictLoader);
+        pane.add(translateBox);
 
         this.translateHoverListener = new TranslateHoverListener(fullTranslate);
         fullTranslate.addMouseListener(this.translateHoverListener);
+
+        positionWindow();
     }
 
     void startPlaying() {
@@ -140,10 +167,10 @@ public class CompanionFrame extends JFrame implements KeyListener {
         this.romanization.setText(phrase.romanization);
         this.translateHoverListener.translation = phrase.translation;
         this.fullTranslate.setText("");
-
-
+        this.fullForeign.setText(phrase.original);
+        this.selectedTranslate.setText("");
 //        pack();
-//        positionWindow();
+
     }
 
     @Override
@@ -186,9 +213,9 @@ public class CompanionFrame extends JFrame implements KeyListener {
     }
 
     public void positionWindow() {
-        int x = (int) (dimension.getWidth() - this.getWidth());
         int y = (int) ((dimension.getHeight() - this.getHeight()) / 2);
-        this.setLocation(x, y);
+        this.setLocation(0, y);
+        this.setSize((int)dimension.getWidth(), (int) dimension.getHeight() / 2);
     }
 
     private class MainPanel extends JPanel {
@@ -398,6 +425,8 @@ public class CompanionFrame extends JFrame implements KeyListener {
             Scene scene = new Scene(new BorderPane(playerHolder));
             this.setScene(scene);
             this.setBackground(Color.black);
+
+            this.playerHolder.setOnMousePressed(event -> togglePause());
         }
 
         private void initializeImageView() {

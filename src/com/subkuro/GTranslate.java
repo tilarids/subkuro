@@ -159,9 +159,6 @@ public class GTranslate {
         return new TranslationResult(trans.getString(0), romanization.getString(3));
     }
 
-    private void requestTranslation(String word) {
-    }
-
     public class TranslationResult {
         public final String translation;
         public final String romanization;
