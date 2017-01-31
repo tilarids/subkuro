@@ -13,6 +13,11 @@ import java.util.regex.Pattern;
  * Created by tilarids on 1/17/17.
  */
 class ASSFile {
+    public ASSFile(String sourceLanguage, String targetLanguage, String oldStyleName) {
+        this.translator = new PhraseTranslator(sourceLanguage, targetLanguage);
+        this.oldStyleName = oldStyleName;
+    }
+
     static class Section {
         Section(String name) {
             this.name = name;
@@ -27,10 +32,10 @@ class ASSFile {
     HashMap<String, PhraseTranslator.Phrases> phrases = new LinkedHashMap();
     ArrayList<String> phrasesIndex = null;
 
-    PhraseTranslator translator = new PhraseTranslator();
+    PhraseTranslator translator;
     static private String leftStyleName = "Default - left";
     static private String topStyleName = "Default - top";
-    static private String oldStyleName = "*Default";
+    private String oldStyleName;
     static private String rightStyleName = "Default - right";
 
     public void parseFile(String inputFilePath) throws IOException {
@@ -100,7 +105,7 @@ class ASSFile {
         assert eventsSection != null;
         ArrayList<String> newLines = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("(Dialogue: \\d+,\\d+:\\d+:\\d+.\\d+,\\d+:\\d+:\\d+.\\d+,)([^,]+)(,[^,]+,\\d+,\\d+,\\d+,,)(.*)");
+        Pattern pattern = Pattern.compile("(Dialogue: \\d+,\\d+:\\d+:\\d+.\\d+,\\d+:\\d+:\\d+.\\d+,)([^,]+)(,[^,]*,\\d+,\\d+,\\d+,,)(.*)");
         for (String line : eventsSection.lines) {
             newLines.add(line);
 
@@ -143,7 +148,7 @@ class ASSFile {
         assert eventsSection != null;
         ArrayList<String> newLines = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("Dialogue: \\d+,(\\d+:\\d+:\\d+.\\d+,\\d+:\\d+:\\d+.\\d+,)([^,]+)(,[^,]+,\\d+,\\d+,\\d+,,)(.*)");
+        Pattern pattern = Pattern.compile("Dialogue: \\d+,(\\d+:\\d+:\\d+.\\d+,\\d+:\\d+:\\d+.\\d+,)([^,]+)(,[^,]*,\\d+,\\d+,\\d+,,)(.*)");
         for (String line : eventsSection.lines) {
             if (!line.startsWith("Dialogue:")) {
                 continue;
@@ -164,7 +169,12 @@ class ASSFile {
                 for (String part : parts) {
                     String[] split = part.split("\\{\\\\i1\\}");
                     phrase.foreignTokens.add(split[0]);
-                    phrase.readingFormTokens.add(split[1].substring(1, split[1].length() - 6));
+                    if (split.length > 1) {
+                        phrase.readingFormTokens.add(split[1].substring(1, split[1].length() - 6));
+                    } else {
+                        // no reading form token!
+                        phrase.readingFormTokens.add(split[0]);
+                    }
                 }
             } else if (matcher.group(2).compareTo(rightStyleName) == 0) {
                 String[] partsOuter = matcher.group(4).split("\\\\N\\\\N\\\\N");

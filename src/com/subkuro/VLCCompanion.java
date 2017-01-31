@@ -41,6 +41,20 @@ public class VLCCompanion {
         media.setRequired(true);
         options.addOption(media);
 
+
+        Option sourceLanguageOpt = new Option("s", "source_language", true, "source language");
+        sourceLanguageOpt.setRequired(false);
+        options.addOption(sourceLanguageOpt);
+
+        Option targetLanguageOpt = new Option("t", "target_language", true, "target language");
+        targetLanguageOpt.setRequired(false);
+        options.addOption(targetLanguageOpt);
+
+        // TODO(tilarids): Detect this automatically?
+        Option styleNameOpt = new Option("n", "style_name", true, "style name");
+        styleNameOpt.setRequired(false);
+        options.addOption(styleNameOpt);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -61,7 +75,11 @@ public class VLCCompanion {
 
         new NativeDiscovery().discover();
 
-        ASSFile subtitleFile = new ASSFile();
+        String sourceLanguage = cmd.getOptionValue("source_language", "ja");
+        String targetLanguage = cmd.getOptionValue("target_language", "en");
+        String oldStyleName = cmd.getOptionValue("style_name", "*Default");;
+
+        ASSFile subtitleFile = new ASSFile(sourceLanguage, targetLanguage, oldStyleName);
         try {
             subtitleFile.parseFile(inputFilePath);
         } catch (IOException e) {
@@ -125,13 +143,13 @@ public class VLCCompanion {
         public void run() {
             //                int time = Integer.decode(getTime());
 //                PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(time);
-            this.frame.updateUI(subtitleFile);
+            this.frame.updateUI();
         }
     }
 
     private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws SQLException, InterruptedException, ExecutionException, IOException, JDOMException {
         subtitleFile.parseTranslatedDialogue();
-        CompanionFrame frame = new CompanionFrame(this.database, mediaFilePath);
+        CompanionFrame frame = new CompanionFrame(this.database, mediaFilePath, subtitleFile);
         frame.setVisible(true);
 
 

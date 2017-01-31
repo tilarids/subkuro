@@ -12,10 +12,13 @@ import static java.lang.Character.isWhitespace;
  * Created by tilarids on 1/17/17.
  */
 public class PhraseTranslator {
-    //Translate translate = TranslateOptions.getDefaultInstance().getService();
-    GTranslate translate = new GTranslate();
+    GTranslate translate;
     KanaToRomaji kr = new KanaToRomaji();
     Tokenizer tokenizer = new Tokenizer();
+
+    public PhraseTranslator(String sourceLanguage, String targetLanguage) {
+        this.translate = new GTranslate(sourceLanguage, targetLanguage);
+    }
 
     public Phrases translatePhrase(String group) throws IOException {
         ArrayList<String> tokens = new ArrayList<>();
@@ -57,7 +60,7 @@ public class PhraseTranslator {
                 continue;
             }
             String foreignToken = tokens.get(i);
-            if (readingForms.get(i) != null) {
+            if (readingForms.get(i) != null && !readingForms.get(i).equalsIgnoreCase("*")) {
                 foreignToken += "{\\i1}(" + readingForms.get(i) + "){\\i0}";
             }
             phrases.foreignTokens.add(foreignToken);

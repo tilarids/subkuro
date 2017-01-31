@@ -36,6 +36,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
     private final SubtitlesDatabase database;
     private final String mediaFile;
     private final Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+    private final ASSFile subtitleFile;
     private JLabel romanization;
     private MainPanel mainPanel;
     private JTextField fullTranslate;
@@ -47,9 +48,10 @@ public class CompanionFrame extends JFrame implements KeyListener {
     private JTextField fullForeign;
     private JLabel selectedTranslate;
 
-    public CompanionFrame(SubtitlesDatabase database, String mediaFile) throws IOException, JDOMException {
+    public CompanionFrame(SubtitlesDatabase database, String mediaFile, ASSFile subtitleFile) throws IOException, JDOMException {
         this.database = database;
         this.mediaFile = mediaFile;
+        this.subtitleFile = subtitleFile;
         initUI();
 
 
@@ -118,7 +120,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
         JButton googleTranslate = new JButton("gtranslate");
         googleTranslate.addActionListener((ActionEvent event) -> {
             try {
-                selectedTranslate.setText(new GTranslate().translate(fullForeign.getSelectedText()).translation);
+                selectedTranslate.setText(subtitleFile.translator.translate.translate(fullForeign.getSelectedText()).translation);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -149,7 +151,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
         this.mainPanel.playerPanel.playIfNecessary(this.mediaFile);
     }
 
-    public void updateUI(ASSFile subtitleFile) {
+    public void updateUI() {
         long time = this.mainPanel.playerPanel.getTime();
         if (this.mainPanel.playerPanel.getTime() <= 0) {
             return;
@@ -161,7 +163,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
         }
         this.timeLabel.setText(subtitleFile.getStringTime(time));
 
-        if (this.romanization.getText().compareTo(phrase.romanization) == 0) {
+        if (this.fullForeign.getText().compareTo(phrase.original) == 0) {
             return;
         }
         this.mainPanel.updateUI(phrase);

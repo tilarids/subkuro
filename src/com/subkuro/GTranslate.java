@@ -21,6 +21,11 @@ public class GTranslate {
     private String sourceLanguage = "ja";
     private String targetLanguage = "en";
 
+    public GTranslate(String sourceLanguage, String targetLanguage) {
+        this.sourceLanguage = sourceLanguage;
+        this.targetLanguage = targetLanguage;
+    }
+
     private static String generateURL(String sourceLanguage, String targetLanguage, String text)
             throws UnsupportedEncodingException {
         String encoded = URLEncoder.encode(text, "UTF-8"); //Encode
@@ -154,9 +159,17 @@ public class GTranslate {
 
         JSONArray jsonarray =  (new JSONArray(rawData)).getJSONArray(0);
         JSONArray trans = jsonarray.getJSONArray(0);
-        JSONArray romanization = jsonarray.getJSONArray(1);
+        String romanizationStr = "";
+        if (supportsRomanization()) {
+            JSONArray romanization = jsonarray.getJSONArray(1);
+            romanizationStr = romanization.getString(3);
+        }
 
-        return new TranslationResult(trans.getString(0), romanization.getString(3));
+        return new TranslationResult(trans.getString(0), romanizationStr);
+    }
+
+    private boolean supportsRomanization() {
+        return sourceLanguage.equalsIgnoreCase("ja");
     }
 
     public class TranslationResult {
