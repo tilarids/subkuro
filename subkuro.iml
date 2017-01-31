@@ -18,11 +18,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="com.atilika.kuromoji:kuromoji-ipadic:0.9.0" level="project" />
-    <orderEntry type="library" name="com.google.cloud:google-cloud-translate:0.8.0" level="project" />
-    <orderEntry type="library" name="org.postgresql:postgresql:9.4.1209.jre7" level="project" />
     <orderEntry type="library" name="org.jdom:jdom:2.0.2" level="project" />
     <orderEntry type="library" name="uk.co.caprica:vlcj:3.10.1" level="project" />
-    <orderEntry type="library" name="org.eclipse.swt:org.eclipse.swt.cocoa.macosx:4.3" level="project" />
-    <orderEntry type="library" name="org.eclipse.swt.org.eclipse.swt.cocoa.macosx.x86_64.4.3.swt:org.eclipse.swt.cocoa.macosx.x86_64:4.3" level="project" />
   </component>
 </module>

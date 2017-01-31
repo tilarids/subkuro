@@ -24,7 +24,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -323,7 +322,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
                 storeButton.addActionListener((ActionEvent event) -> {
                     try {
                         database.storeSkipWord(foreign);
-                    } catch (SQLException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });

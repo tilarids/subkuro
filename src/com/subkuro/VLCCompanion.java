@@ -1,19 +1,10 @@
 package com.subkuro;
 
-import com.sun.jna.NativeLibrary;
 import org.apache.commons.cli.*;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.jdom2.Document;
 import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.concurrent.*;
 
 /**
@@ -22,8 +13,8 @@ import java.util.concurrent.*;
 public class VLCCompanion {
     SubtitlesDatabase database;
 
-    public VLCCompanion(Connection con) throws SQLException {
-        this.database = new SubtitlesDatabase(con);
+    public VLCCompanion(String databaseName) throws FileNotFoundException {
+        this.database = new SubtitlesDatabase(databaseName);
     }
 
     public static void main(String[] args) {
@@ -85,23 +76,19 @@ public class VLCCompanion {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String connectionURL = "jdbc:postgresql://localhost:5432/" + dbName;
+        VLCCompanion companion = null;
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection con = DriverManager.getConnection (connectionURL);
-            VLCCompanion companion = new VLCCompanion(con);
+            companion = new VLCCompanion(dbName);
             companion.startPolling(subtitleFile, mediaFilePath);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
-        } catch (JDOMException e) {
-            e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JDOMException e) {
             e.printStackTrace();
         }
     }
@@ -116,38 +103,13 @@ public class VLCCompanion {
             this.frame = frame;
         }
 
-        String getTime() throws IOException, JDOMException {
-            URL url = new URL ("http://localhost:8080/requests/status.xml");
-            String encoding = java.util.Base64.getEncoder().encodeToString(":1234".getBytes("utf-8"));
-
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setRequestProperty  ("Authorization", "Basic " + encoding);
-            InputStream content = (InputStream)connection.getInputStream();
-            BufferedReader in   =
-                    new BufferedReader (new InputStreamReader(content));
-            String line;
-            StringBuilder sb = new StringBuilder();
-            String inline = "";
-            while ((inline = in.readLine()) != null) {
-                sb.append(inline);
-            }
-
-            SAXBuilder builder = new SAXBuilder();
-
-            Document document = (Document) builder.build(new ByteArrayInputStream(sb.toString().getBytes()));
-            return document.getRootElement().getChildText("time");
-        }
         @Override
         public void run() {
-            //                int time = Integer.decode(getTime());
-//                PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(time);
             this.frame.updateUI();
         }
     }
 
-    private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws SQLException, InterruptedException, ExecutionException, IOException, JDOMException {
+    private void startPolling(ASSFile subtitleFile, String mediaFilePath) throws InterruptedException, ExecutionException, IOException, JDOMException {
         subtitleFile.parseTranslatedDialogue();
         CompanionFrame frame = new CompanionFrame(this.database, mediaFilePath, subtitleFile);
         frame.setVisible(true);
