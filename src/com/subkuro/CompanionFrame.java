@@ -154,7 +154,8 @@ public class CompanionFrame extends JFrame implements KeyListener {
         if (this.mainPanel.playerPanel.getTime() <= 0) {
             return;
         }
-        PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(this.mainPanel.playerPanel.getTime());
+        long phraseTime = this.mainPanel.playerPanel.getTime() + this.mainPanel.playerPanel.getSubtitleDelay();
+        PhraseTranslator.Phrases phrase = subtitleFile.getPhraseAtTime(phraseTime);
         if (phrase == null) {
             return;
         }
@@ -192,6 +193,10 @@ public class CompanionFrame extends JFrame implements KeyListener {
             this.mainPanel.playerPanel.seek(e);
         } else if (key == KeyEvent.VK_V) {
             this.translateHoverListener.hover();
+        } else if (key == KeyEvent.VK_G) {
+            this.mainPanel.playerPanel.increaseSubtitleDelay(-100);
+        } else if (key == KeyEvent.VK_H) {
+            this.mainPanel.playerPanel.increaseSubtitleDelay(100);
         }
     }
 
@@ -342,7 +347,7 @@ public class CompanionFrame extends JFrame implements KeyListener {
         private Pane playerHolder;
         private WritablePixelFormat<ByteBuffer> pixelFormat;
         private FloatProperty videoSourceRatioProperty;
-
+        private long subtitleDelay = 0;
         public void togglePause() {
             this.mediaPlayerComponent.getMediaPlayer().setPause(this.mediaPlayerComponent.getMediaPlayer().isPlaying());
         }
@@ -350,6 +355,11 @@ public class CompanionFrame extends JFrame implements KeyListener {
         public long getTime() {
             return this.mediaPlayerComponent.getMediaPlayer().getTime();
         }
+
+        public long getSubtitleDelay() {
+            return this.subtitleDelay;
+        }
+
 
         public void seek(KeyEvent e) {
             long seek = 500;
@@ -366,6 +376,11 @@ public class CompanionFrame extends JFrame implements KeyListener {
                 seek *= 100;
             }
             this.mediaPlayerComponent.getMediaPlayer().skip(seek);
+        }
+
+        public void increaseSubtitleDelay(int delay) {
+            this.subtitleDelay += delay;
+            System.out.println("Subtitle delay: " + this.subtitleDelay);
         }
 
 
@@ -408,6 +423,11 @@ public class CompanionFrame extends JFrame implements KeyListener {
                         mediaPlayer.unlock();
                     }
                 });
+            }
+
+            @Override
+            protected String[] onGetMediaPlayerFactoryExtraArgs() {
+                return new String[]{"--file-caching=10000"};
             }
         }
 

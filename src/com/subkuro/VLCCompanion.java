@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -58,7 +59,7 @@ public class VLCCompanion {
         String dbName = cmd.getOptionValue("db");
         String mediaFilePath = cmd.getOptionValue("media");
 
-        NativeLibrary.addSearchPath("vlc", "/Applications/VLC.app/Contents/MacOS/lib");
+        new NativeDiscovery().discover();
 
         ASSFile subtitleFile = new ASSFile();
         try {
