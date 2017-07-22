@@ -192,12 +192,14 @@ public class CompanionFrame extends JFrame implements KeyListener {
             this.mainPanel.playerPanel.togglePause();
         } else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) {
             this.mainPanel.playerPanel.seek(e);
-        } else if (key == KeyEvent.VK_V) {
+        } else if (key == KeyEvent.VK_B) {
             this.translateHoverListener.hover();
         } else if (key == KeyEvent.VK_G) {
             this.mainPanel.playerPanel.increaseSubtitleDelay(-100);
         } else if (key == KeyEvent.VK_H) {
             this.mainPanel.playerPanel.increaseSubtitleDelay(100);
+        } else if (key == KeyEvent.VK_V) {
+            this.mainPanel.playerPanel.cycleSpu();
         }
     }
 
@@ -382,6 +384,15 @@ public class CompanionFrame extends JFrame implements KeyListener {
         public void increaseSubtitleDelay(int delay) {
             this.subtitleDelay += delay;
             System.out.println("Subtitle delay: " + this.subtitleDelay);
+        }
+
+        public void cycleSpu() {
+            DirectMediaPlayer mp = this.mediaPlayerComponent.getMediaPlayer();
+            if (mp.getSpu() == mp.getSpuCount()) {
+                mp.setSpu(-1);
+            } else {
+                mp.setSpu(mp.getSpu() + 1);
+            }
         }
 
 

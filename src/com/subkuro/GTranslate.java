@@ -162,7 +162,9 @@ public class GTranslate {
         String romanizationStr = "";
         if (supportsRomanization()) {
             JSONArray romanization = jsonarray.getJSONArray(1);
-            romanizationStr = romanization.getString(3);
+            if (!romanization.isNull(3)) {
+                romanizationStr = romanization.getString(3);
+            }
         }
 
         return new TranslationResult(trans.getString(0), romanizationStr);

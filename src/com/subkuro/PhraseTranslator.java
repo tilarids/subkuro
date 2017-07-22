@@ -48,7 +48,9 @@ public class PhraseTranslator {
             }
             readingForms.set(i, kr.convert(readingForms.get(i)));
         }
-        readingForms.set(tokens.size() - 1, kr.convert(readingForms.get(tokens.size() - 1)));
+        if (tokens.size() > 0) {
+            readingForms.set(tokens.size() - 1, kr.convert(readingForms.get(tokens.size() - 1)));
+        }
 
         ArrayList<GTranslate.TranslationResult> translations = translate.translate(tokens);
 
